@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.apache.ignite.examples.servicegrid;
+package com.ignite.servicegrid;
 
 import org.apache.ignite.Ignite;
 import org.apache.ignite.IgniteCache;
@@ -24,11 +24,19 @@ import org.apache.ignite.resources.IgniteInstanceResource;
 import org.apache.ignite.services.Service;
 import org.apache.ignite.services.ServiceContext;
 
+import java.io.FileWriter;
+import java.io.PrintWriter;
+
 /**
  * Simple service which utilizes Ignite cache as a mechanism to provide
  * distributed {@link SimpleMapService} functionality.
  */
 public class SimpleMapServiceImpl<K, V> implements Service, SimpleMapService<K, V> {
+    public static void printToFile(String text) throws Exception{
+        try (PrintWriter out = new PrintWriter(new FileWriter("fileText.txt", true))) {
+            out.println(text);
+        }
+    }
     /** Serial version UID. */
     private static final long serialVersionUID = 0L;
 
@@ -60,10 +68,14 @@ public class SimpleMapServiceImpl<K, V> implements Service, SimpleMapService<K, 
     }
 
     /** {@inheritDoc} */
-    @Override public void cancel(ServiceContext ctx) {
+    @Override public void cancel(ServiceContext ctx){
         ignite.destroyCache(ctx.name());
 
-        System.out.println("Service was cancelled: " + ctx.name());
+        try {
+            printToFile("Service was cancelled: " + ctx.name());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     /** {@inheritDoc} */
@@ -73,11 +85,11 @@ public class SimpleMapServiceImpl<K, V> implements Service, SimpleMapService<K, 
         // for each service deployment to use its own isolated cache.
         cache = ignite.getOrCreateCache(new CacheConfiguration<K, V>(ctx.name()));
 
-        System.out.println("Service was initialized: " + ctx.name());
+        printToFile("Service was initialized: " + ctx.name());
     }
 
     /** {@inheritDoc} */
     @Override public void execute(ServiceContext ctx) throws Exception {
-        System.out.println("Executing distributed service: " + ctx.name());
+        printToFile("Executing distributed service: " + ctx.name());
     }
 }
